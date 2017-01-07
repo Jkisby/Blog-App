@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<div class="col-md-12">
+    {{post.render() | safe}}
+  </div>
+
+  {% if mine %}
+  	{% if mine == 'true' %}	
+  	<div class="col-md-12">
+      <a href="/blog/edit/{{post.key().id()}}"><button> EDIT POST</button></a> 
+      </div>
+    {% endif %}  
+
+  {% elif likes.user_id %}
+    <div class="col-md-12">
+      <p class="like">LIKED</p>
+    </div>
+  
+  {% elif not likes %}
+    <div class="col-md-12">
+      <form method="post">
+  	   <input type="hidden" name="liked" value="true">
+  	   <input name="liked" type="submit" value="Like"></input>
+      </form>
+    </div>
+  {% endif %}
+
+  {% if user %}
+    <div class="comments col-md-12 divider"></div>
+    <div class="col-md-12">
+      <form method="post">
+        <label>
+          <div>Add a Comment</div>
+          <textarea class="comment" name="content"></textarea>
+        </label>
+
+        <input type="submit">
+      </form>
+    </div>
+    <div class="comments col-md-12 divider"></div>
+    {% endif %}
+    
+    </br>
+    <div class="col-md-12">
+      <h3>Comments</h3> <hr>
+    </div>
+    
+    {% if comments %}
+   		{% for c in comments %}
+   	    <div class="col-md-12">
+      		<p> {{c.content}} </p>
+      		<p>By {{c.user_name}} on {{c.created.strftime("%b %d, %Y, at %H:%M")}}</p>
+      		
+      		{% if c.last_modified != c.created %}
+      			<p class="edit"> Edited on {{c.last_modified.strftime("%b %d, %Y, at %H:%M")}}</p>
+      		{% endif %}
+
+      		{% if user and user.key().id() == c.user_id %}
+    			 <p><a href="/comment/{{c.key().id()}}">EDIT YOUR POST</a></p>
+    		  {% endif %}	
+    		</div>
+    		<div class="col-md-12 divider"></div>
+    	{% endfor %}
+    {% endif %}
+{% endblock %}
+

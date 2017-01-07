@@ -1,0 +1,21 @@
+<div class="post">
+  <div class="post-heading">
+    <div class="post-title">
+      {{p.subject}}
+    </div>
+
+    <div class="post-date">
+      <p> 
+        {{p.created.strftime("%b %d, %Y")}}
+        {% if p.created != p.last_modified %}
+             -    Edited: {{p.last_modified.strftime("%b %d, %Y")}}
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="post-content">
+   <p> {{p._render_text | safe}}</p>
+  </div>
+</div>
+

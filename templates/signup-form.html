@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="col-md-6">
+    <h2>Signup</h2>
+    <h3>Already have an account? <a href="/login"><h3>Log in here</h3></a></h3>
+  </div>  
+
+  <div class="col-md-6">
+    <form method="post" class="form-horizontal">
+      <p>Username</p>
+      <input class="form-control" type="text" name="username" value="{{username}}">
+      <p class="error">
+        {{error_username}}
+      </p>
+      <p>Password</p>
+      <input class="form-control" type="password" name="password" value="">
+      <p class="error">
+        {{error_password}}
+      </p>
+      <p>Verify Password</p>
+      <input class="form-control" type="password" name="verify" value="">
+      <p class="error">
+        {{error_verify}}
+      </p> 
+      <p>Email (optional)</p>       
+      <input class="form-control" type="text" name="email" value="{{email}}">
+      <p class="error">
+        {{error_email}}
+      </p>
+      <input type="submit">
+    </form>
+  </div>  
+{% endblock %}

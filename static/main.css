@@ -1,0 +1,135 @@
+html, 
+body {
+  background-image: url("background.jpg");
+        background-size: cover;
+}
+
+.login-area {
+    font-size: 16px;
+    color: gray;
+    margin-top: 20px;
+}
+.container {
+  background-color: white;
+}
+
+.login-link {
+    color: gray;
+    text-decoration: none;
+}
+
+.login-link:visited {
+    color: gray;
+}
+
+.login-link:hover {
+    text-decoration: underline;
+}
+
+.post:hover {
+    text-decoration: none;
+}
+
+h1 {
+    font-size: 40px;
+}
+
+h2 {
+    font-size: 34px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.error {
+    color: red;
+}
+a {
+    text-decoration: none;
+    font-size: 16px;
+    color: #0093B9;
+    line-height: 17px;
+}
+a:hover {
+    color: gray;
+    line-height: 17px;
+}
+
+p {
+    color: black;
+    font-size: 16px;
+}
+
+label {
+  display: block;
+  font-size: 20px;
+}
+
+label + label {
+    margin-top: 20px;
+}
+
+input[type=text] {
+    width: 500px;
+    font-size: 20px;
+    padding: 2px;
+    font-family: monospace;
+}
+
+textarea {
+  width: 500px;
+  height: 400px;
+  font-size: 17px;
+  font-family: monospace;
+}
+
+textarea.comment {
+  height: 100px;
+}
+
+input[type=submit] {
+  font-size: 24px;
+}
+
+.divider {
+    position: relative;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 30px;
+    margin-top: 30px;
+}
+
+.main-title {
+    color: #222;
+    text-decoration: none;
+    font-size: 60px;
+}
+
+.post + .post {
+    margin-top: 15px;
+}
+
+.post-heading {
+    position: relative;
+    border-bottom: 3px solid #666;
+}
+
+.post-title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.post-date {
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    color: #999;
+
+}
+
+.post-content {
+    margin-top: 5px;
+}
+
+.like {
+    color: green;
+}
+

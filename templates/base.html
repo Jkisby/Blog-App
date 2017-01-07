@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link type="text/css" rel="stylesheet" href="/static/bootstrap.min.css" />
+  <link type="text/css" rel="stylesheet" href="/static/main.css" />
+  <title>The Blog</title>
+</head>
+
+<body>
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-3"></div>
+      <div class="col-md-6">
+        <a href="/blog"><h1 class="text-center main-title">The Blog</h1></a>
+      </div>
+      
+    
+      <div class="col-md-3 login-area">
+        <p class="text-right">{% if user %}
+          {{user.name}} (<a class="login-link" href="/logout">logout</a>)
+        {% else %}
+          <a class="login-link" href="/login">login</a>
+          |
+          <a class="login-link" href="/signup">signup</a>
+        {% endif %}</p>
+      </div>
+    </div>
+    <hr></br>
+    <div class="row" id="content">
+      {% block content %}
+      {% endblock %}
+    </div>
+  </div>
+</body>
+
+</html>
+

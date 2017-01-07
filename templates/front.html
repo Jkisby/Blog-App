@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if user != "" %}
+  <div class="col-md-6"></div>
+  <div class="col-md-6"><a href="/blog/newpost"><h2 class="text-right">New Post</h2></a></div>
+  <div class="col-md-12 divider"></div>
+{% endif %}
+  {% for p in posts %}
+    <a href="/blog/{{p.key().id()}}" class="post">
+      <div class="col-md-12">
+        {{ p.render() | safe }}
+      </div>
+    </a>   
+    {% if user and user.key().id() == p.user_id %}
+      <div class="col-md-12">
+    	 <a href="/blog/edit/{{p.key().id()}}"><button> EDIT POST</button></a>
+      </div>	
+    {% endif %}	
+    <div class="col-md-12 divider"></div>
+  {% endfor %}
+
+{% endblock %}
