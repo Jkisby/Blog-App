@@ -12,7 +12,7 @@ jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
                                autoescape=True)
 
 
-
+# Main handler with placeholder methods
 class BlogHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -24,19 +24,23 @@ class BlogHandler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
+    # sets a cookie with given parameters
     def set_secure_cookie(self, name, val):
         cookie_val = make_secure_val(val)
         self.response.headers.add_header(
             'Set-Cookie',
             '%s=%s; Path=/' % (name, cookie_val))
 
+    # reads a cookie and checks validity
     def read_secure_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
         return cookie_val and check_secure_val(cookie_val)
 
+    # create a cookie for user on login
     def login(self, user):
         self.set_secure_cookie('user_id', str(user.key().id()))
 
+    # remove cookie value on logout
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
@@ -51,13 +55,14 @@ def render_post(response, post):
     response.out.write(post.content)
 
 
+# main page redirects to blog
 class MainPage(BlogHandler):
     def get(self):
         self.write('Hello!')
         self.redirect('/blog')
 
 
-# user stuf
+# renders main blog page. Checks for user to allow creating posts.
 class BlogFront(BlogHandler):
     def get(self):
         if self.user:
@@ -70,15 +75,19 @@ class BlogFront(BlogHandler):
         self.render('front.html', posts=posts, user=cookie)
 
 
+# renders individual post pages
 class PostPage(BlogHandler):
     def get(self, post_id):
+        # find post and comments from database
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         if not post:
             self.error(404)
-            return
+            return self.render('error.html')
         comments = Comment.all().filter('post_id =',
                                         int(post_id)).order('-created')
+
+        # checks if user logged in/post belongs to user
         if self.user:
             uid = self.read_secure_cookie('user_id')
             likes = Like.get_like(int(uid), int(post_id))
@@ -93,6 +102,7 @@ class PostPage(BlogHandler):
             self.render("permalink.html", post=post, comments=comments,
                         mine="false")
 
+    # post method, checks like button and comment forms.
     def post(self, post_id):
         if not self.user:
             return self.redirect('/login')
@@ -101,6 +111,7 @@ class PostPage(BlogHandler):
         uid = self.read_secure_cookie('user_id')
         user = User.by_id(int(uid))
         if content:
+            # add comment if user logged in
             c = Comment(parent=comment_key(), content=content,
                         user_id=int(uid), user_name=user.name,
                         post_id=int(post_id))
@@ -108,9 +119,11 @@ class PostPage(BlogHandler):
             time.sleep(1)
             return self.redirect('/blog/%s' % str(c.post_id))
         if liked:
+            # check if likes exist already/post belongs to user before liking
             likes = Like.get_like(int(uid), int(post_id))
             if int(uid) != int(post_id) and not likes:
-                l = Like(parent=like_key(), user_id=int(uid), post_id=int(post_id))
+                l = Like(parent=like_key(), user_id=int(uid),
+                         post_id=int(post_id))
                 l.put()
                 time.sleep(1)
                 return self.redirect('/blog/%s' % str(post_id))
@@ -118,12 +131,13 @@ class PostPage(BlogHandler):
                 key = db.Key.from_path('Post', int(post_id), parent=blog_key())
                 post = db.get(key)
                 comments = Comment.all().filter('post_id =',
-                                        int(post_id)).order('-created')
-                error = "Can't like your own post or like a post more than once!"
-                return self.render("permalink.html", post=post, comments=comments,
-                        error=error)
+                                                int(post_id)).order('-created')
+                error = "Can't like own post or like a post more than once!"
+                return self.render("permalink.html", post=post,
+                                   comments=comments, error=error)
 
 
+# renders new post page, redirects to login if not logged in
 class NewPost(BlogHandler):
     def get(self):
         if self.user:
@@ -139,20 +153,23 @@ class NewPost(BlogHandler):
         content = self.request.get('content')
         uid = self.read_secure_cookie('user_id')
 
+        # check subject and content both entered
         if subject and content:
             p = Post(parent=blog_key(), subject=subject, content=content,
                      user_id=int(uid))
             p.put()
-            self.redirect('/blog/%s' % str(p.key().id()))
+            return self.redirect('/blog/%s' % str(p.key().id()))
         else:
             error = "subject and content, please!"
             self.render("newpost.html", subject=subject, content=content,
                         error=error)
 
 
+# renders edit comment page for a comment
 class editComment(BlogHandler):
     def get(self, comment_id):
         if self.user:
+            # ensure user is authorized to view this page
             key = db.Key.from_path('Comment', int(comment_id),
                                    parent=comment_key())
             comment = db.get(key)
@@ -166,11 +183,12 @@ class editComment(BlogHandler):
         else:
             self.redirect("/login")
 
+    # post method checks user is authorized to edit comment
     def post(self, comment_id):
         if not self.user:
             return self.redirect('/login')
 
-        uid = self.read_secure_cookie('user_id')    
+        uid = self.read_secure_cookie('user_id')
         key = db.Key.from_path('Comment', int(comment_id),
                                parent=comment_key())
         comment = db.get(key)
@@ -182,18 +200,20 @@ class editComment(BlogHandler):
         if delete:
             comment.delete()
             time.sleep(1)
-            self.redirect('/blog/%s' % comment.post_id)
-        else:    
+            return self.redirect('/blog/%s' % comment.post_id)
+        else:
             comment.content = self.request.get('content')
             comment.put()
             content = self.request.get('content')
             time.sleep(1)
-            self.redirect('/blog/%s' % comment.post_id)
+            return self.redirect('/blog/%s' % comment.post_id)
 
 
+# renders page to edit a post
 class editPost(BlogHandler):
     def get(self, post_id):
         if self.user:
+            # check user is authorized to view this page
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
             uid = self.read_secure_cookie('user_id')
@@ -205,11 +225,12 @@ class editPost(BlogHandler):
         else:
             self.redirect("/login")
 
+    # post method checks user is authorized to edit post
     def post(self, post_id):
         if not self.user:
             return self.redirect('/login')
 
-        uid = self.read_secure_cookie('user_id')    
+        uid = self.read_secure_cookie('user_id')
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         if post.user_id != int(uid):
@@ -220,7 +241,7 @@ class editPost(BlogHandler):
             post.delete()
             time.sleep(1)
             return self.redirect('/blog')
-        else:    
+        else:
             post.subject = self.request.get('subject')
             post.content = self.request.get('content')
             post.put()
@@ -228,6 +249,7 @@ class editPost(BlogHandler):
             return self.redirect('/blog/%s' % post.key().id())
 
 
+# regex methods to ensure valid username/password/email
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 
 
@@ -249,6 +271,7 @@ def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
 
+# signup handler renders signup page
 class Signup(BlogHandler):
     def get(self):
         self.render("signup-form.html")
@@ -263,6 +286,7 @@ class Signup(BlogHandler):
         params = dict(username=self.username,
                       email=self.email)
 
+        # add errors if exist in signup process
         if not valid_username(self.username):
             params['error_username'] = "That's not a valid username."
             have_error = True
@@ -302,6 +326,7 @@ class Register(Signup):
             self.redirect('/blog')
 
 
+# login handler renders login page
 class Login(BlogHandler):
     def get(self):
         self.render('login-form.html')
@@ -309,7 +334,7 @@ class Login(BlogHandler):
     def post(self):
         username = self.request.get('username')
         password = self.request.get('password')
-
+        # ensure user details are correct
         u = User.login(username, password)
         if u:
             self.login(u)
@@ -319,10 +344,18 @@ class Login(BlogHandler):
             self.render('login-form.html', error=msg)
 
 
+# logout handler
 class Logout(BlogHandler):
     def get(self):
         self.logout()
         self.redirect('/blog')
+
+
+# 404 error page
+class NotFoundPageHandler(BlogHandler):
+    def get(self):
+        self.error(404)
+        self.render('error.html')
 
 
 app = webapp2.WSGIApplication([('/', MainPage),
@@ -334,5 +367,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/logout', Logout),
                                ('/comment/([0-9]+)', editComment),
                                ('/blog/edit/([0-9]+)', editPost),
+                               ('/.*', NotFoundPageHandler)
                                ],
                               debug=True)
