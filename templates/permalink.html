@@ -5,6 +5,10 @@
     {{post.render() | safe}}
   </div>
 
+  {% if error %}
+    <div class="col-md-12"><p class="error">{{error}}</p></div>
+  {% endif %}  
+
   {% if mine %}
   	{% if mine == 'true' %}	
   	<div class="col-md-12">

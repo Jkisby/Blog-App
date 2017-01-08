@@ -13,11 +13,6 @@ jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
 
 
 
-
-
-
-
-
 class BlogHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -62,31 +57,7 @@ class MainPage(BlogHandler):
         self.redirect('/blog')
 
 
-# user stuff
-
-
-
-
-
-
-# blog stuff
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# user stuf
 class BlogFront(BlogHandler):
     def get(self):
         if self.user:
@@ -124,7 +95,7 @@ class PostPage(BlogHandler):
 
     def post(self, post_id):
         if not self.user:
-            self.redirect('/blog')
+            return self.redirect('/login')
         content = self.request.get('content')
         liked = self.request.get('liked')
         uid = self.read_secure_cookie('user_id')
@@ -135,12 +106,22 @@ class PostPage(BlogHandler):
                         post_id=int(post_id))
             c.put()
             time.sleep(1)
-            self.redirect('/blog/%s' % str(c.post_id))
+            return self.redirect('/blog/%s' % str(c.post_id))
         if liked:
-            l = Like(parent=like_key(), user_id=int(uid), post_id=int(post_id))
-            l.put()
-            time.sleep(1)
-            self.redirect('/blog/%s' % str(post_id))
+            likes = Like.get_like(int(uid), int(post_id))
+            if int(uid) != int(post_id) and not likes:
+                l = Like(parent=like_key(), user_id=int(uid), post_id=int(post_id))
+                l.put()
+                time.sleep(1)
+                return self.redirect('/blog/%s' % str(post_id))
+            else:
+                key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+                post = db.get(key)
+                comments = Comment.all().filter('post_id =',
+                                        int(post_id)).order('-created')
+                error = "Can't like your own post or like a post more than once!"
+                return self.render("permalink.html", post=post, comments=comments,
+                        error=error)
 
 
 class NewPost(BlogHandler):
@@ -152,7 +133,7 @@ class NewPost(BlogHandler):
 
     def post(self):
         if not self.user:
-            self.redirect('/blog')
+            return self.redirect('/login')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -186,9 +167,17 @@ class editComment(BlogHandler):
             self.redirect("/login")
 
     def post(self, comment_id):
+        if not self.user:
+            return self.redirect('/login')
+
+        uid = self.read_secure_cookie('user_id')    
         key = db.Key.from_path('Comment', int(comment_id),
                                parent=comment_key())
         comment = db.get(key)
+        if comment.user_id != int(uid):
+            alert("You are not authorized to edit this comment!")
+            return self.redirect('/blog')
+
         delete = self.request.get('delete')
         if delete:
             comment.delete()
@@ -217,19 +206,26 @@ class editPost(BlogHandler):
             self.redirect("/login")
 
     def post(self, post_id):
+        if not self.user:
+            return self.redirect('/login')
+
+        uid = self.read_secure_cookie('user_id')    
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
+        if post.user_id != int(uid):
+            return self.redirect('/blog')
+
         delete = self.request.get('delete')
         if delete:
             post.delete()
             time.sleep(1)
-            self.redirect('/blog')
+            return self.redirect('/blog')
         else:    
             post.subject = self.request.get('subject')
             post.content = self.request.get('content')
             post.put()
             time.sleep(1)
-            self.redirect('/blog/%s' % post.key().id())
+            return self.redirect('/blog/%s' % post.key().id())
 
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
