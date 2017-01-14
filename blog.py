@@ -133,7 +133,7 @@ class PostPage(BlogHandler):
                 comments = Comment.all().filter('post_id =',
                                                 int(post_id)).order('-created')
                 error = "Can't like own post or like a post more than once!"
-                return self.render("permalink.html", post=post,
+                return self.render("permalink.html", post=post, mine="false",
                                    comments=comments, error=error)
 
 
@@ -173,6 +173,9 @@ class editComment(BlogHandler):
             key = db.Key.from_path('Comment', int(comment_id),
                                    parent=comment_key())
             comment = db.get(key)
+            if not comment:
+                self.error(404)
+                self.render('error.html')
             uid = self.read_secure_cookie('user_id')
             logging.info(comment)
             if comment.user_id != int(uid):
@@ -192,8 +195,7 @@ class editComment(BlogHandler):
         key = db.Key.from_path('Comment', int(comment_id),
                                parent=comment_key())
         comment = db.get(key)
-        if comment.user_id != int(uid):
-            alert("You are not authorized to edit this comment!")
+        if comment.user_id != int(uid) or not comment:
             return self.redirect('/blog')
 
         delete = self.request.get('delete')
@@ -216,6 +218,9 @@ class editPost(BlogHandler):
             # check user is authorized to view this page
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
+            if not post:
+                self.error(404)
+                return self.render('error.html')
             uid = self.read_secure_cookie('user_id')
             if post.user_id != int(uid):
                 error = "you are not authorized to edit this Blog Post!"
@@ -233,7 +238,7 @@ class editPost(BlogHandler):
         uid = self.read_secure_cookie('user_id')
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        if post.user_id != int(uid):
+        if post.user_id != int(uid) or not post:
             return self.redirect('/blog')
 
         delete = self.request.get('delete')

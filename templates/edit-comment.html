@@ -2,9 +2,9 @@
 
 {% block content %}
 <div class="col-md-6">
-  <h2>Edit Comment</h2>
+  <h2 class="text-center">Edit Comment</h2>
   {% if comment %}
-  <a href="/blog/{{comment.post_id}}"><h3>Cancel</h3></a>
+  <a class="text-center" href="/blog/{{comment.post_id}}"><h2>Cancel</h2></a>
   {% endif %}
 </div>  
 {% if error %}

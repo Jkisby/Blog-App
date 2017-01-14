@@ -134,5 +134,5 @@ class Like(db.Model):
     @classmethod
     def get_like(cls, user, post):
         l = Like.all().filter('user_id =', user).filter('post_id =',
-                                                        post).get()
-        return l
+                                                        post)
+        return l.get()

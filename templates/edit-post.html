@@ -2,9 +2,9 @@
 
 {% block content %}
 <div class="col-md-6">
-  <h2>Edit post</h2>
+  <h2 class="text-center">Edit post</h2>
   {% if post %}
-  <a href="/blog/{{post.key().id()}}"><h3>Cancel</h3></a>
+  <a class="text-center" href="/blog/{{post.key().id()}}"><h2>Cancel</h2></a>
   {% endif %}
 </div>  
   {% if error %}
